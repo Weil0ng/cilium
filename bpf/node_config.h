@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2016-2019 Authors of Cilium
+ *  Copyright (C) 2016-2020 Authors of Cilium
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -116,6 +116,8 @@ DEFINE_IPV6(SNAT_IPV6_EXTERNAL, 0xbe, 0xef, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1, 0x0, 0
 #define POLICY_MAP_SIZE 16384
 #define IPCACHE_MAP_SIZE 512000
 #define POLICY_PROG_MAP_SIZE ENDPOINTS_MAP_SIZE
+#define IPV4_FRAG_DATAGRAMS_MAP test_cilium_ipv4_frag_datagrams
+#define CILIUM_IPV4_FRAG_MAP_MAX_ENTRIES 8192
 #ifndef SKIP_DEBUG
 #define LB_DEBUG
 #endif

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2019 Authors of Cilium
+ *  Copyright (C) 2020 Authors of Cilium
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -997,7 +997,7 @@ static inline int nodeport_lb4(struct __ctx_buff *ctx, __u32 src_identity)
 
 	l4_off = l3_off + ipv4_hdrlen(ip4);
 
-	ret = lb4_extract_key(ctx, &tuple, l4_off, &key, &csum_off, CT_EGRESS);
+	ret = lb4_extract_key(ctx, ip4, l4_off, &key, &csum_off, CT_EGRESS);
 	if (IS_ERR(ret)) {
 		if (ret == DROP_UNKNOWN_L4)
 			return CTX_ACT_OK;
