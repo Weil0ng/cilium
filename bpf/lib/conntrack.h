@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2016-2019 Authors of Cilium
+ *  Copyright (C) 2016-2020 Authors of Cilium
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@
 
 #include "common.h"
 #include "utils.h"
+#include "ipv4.h"
 #include "ipv6.h"
 #include "dbg.h"
 #include "l4.h"
@@ -482,6 +483,26 @@ static inline void __inline__ ipv4_ct_tuple_reverse(struct ipv4_ct_tuple *tuple)
 	ct_flip_tuple_dir4(tuple);
 }
 
+static inline int __inline__ ipv4_ct_extract_l4_ports(struct __ctx_buff *ctx,
+						      int off,
+						      struct ipv4_ct_tuple *tuple)
+{
+#if defined IPV4_FRAGMENTS && defined HAVE_LRU_MAP_TYPE
+	void *data, *data_end;
+	struct iphdr *ip4;
+
+	// TODO: Can we optimise this out?
+	if (!revalidate_data(ctx, &data, &data_end, &ip4))
+		return DROP_INVALID;
+
+	if (unlikely(ipv4_is_fragment(ip4)))
+		return ipv4_handle_fragment(ctx, ip4, off,
+					    (struct ipv4_frag_l4ports *)&tuple->dport);
+#endif
+	/* load sport + dport into tuple */
+	return ctx_load_bytes(ctx, off, &tuple->dport, 4);
+}
+
 static inline void ct4_cilium_dbg_tuple(struct __ctx_buff *ctx, __u8 type,
 					  const struct ipv4_ct_tuple *tuple,
 					  __u32 rev_nat_index, int dir)
@@ -563,14 +584,12 @@ static inline int __inline__ ct_lookup4(void *map, struct ipv4_ct_tuple *tuple,
 				action = ACTION_CREATE;
 		}
 
-		/* load sport + dport into tuple */
-		if (ctx_load_bytes(ctx, off, &tuple->dport, 4) < 0)
+		if (ipv4_ct_extract_l4_ports(ctx, off, tuple) < 0)
 			return DROP_CT_INVALID_HDR;
 		break;
 
 	case IPPROTO_UDP:
-		/* load sport + dport into tuple */
-		if (ctx_load_bytes(ctx, off, &tuple->dport, 4) < 0)
+		if (ipv4_ct_extract_l4_ports(ctx, off, tuple) < 0)
 			return DROP_CT_INVALID_HDR;
 
 		action = ACTION_CREATE;
