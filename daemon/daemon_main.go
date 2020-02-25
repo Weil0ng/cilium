@@ -499,7 +499,7 @@ func init() {
 	flags.Bool(option.EnableNodePort, false, "Enable NodePort type services by Cilium (beta)")
 	option.BindEnv(option.EnableNodePort)
 
-	flags.String(option.NodePortMode, defaults.NodePortMode, "BPF NodePort mode (\"snat\", \"dsr\", \"hybrid\")")
+	flags.String(option.NodePortMode, option.NodePortModeHybrid, "BPF NodePort mode (\"snat\", \"dsr\", \"hybrid\")")
 	option.BindEnv(option.NodePortMode)
 
 	flags.StringSlice(option.NodePortRange, []string{fmt.Sprintf("%d", option.NodePortMinDefault), fmt.Sprintf("%d", option.NodePortMaxDefault)}, fmt.Sprintf("Set the min/max NodePort port range"))
@@ -1450,12 +1450,6 @@ func initKubeProxyReplacementOptions() {
 		log.Infof("Auto-enabling %q, %q, %q features", option.EnableNodePort,
 			option.EnableExternalIPs, option.EnableHostReachableServices)
 
-		if option.Config.Tunnel == option.TunnelDisabled {
-			log.Infof("Auto-enabling NodePort's %q mode feature to enable DSR for TCP",
-				option.NodePortModeHybrid)
-			option.Config.NodePortMode = option.NodePortModeHybrid
-		}
-
 		option.Config.EnableNodePort = true
 		option.Config.EnableExternalIPs = true
 		option.Config.EnableHostReachableServices = true
@@ -1576,6 +1570,14 @@ func initKubeProxyReplacementOptions() {
 
 	if !option.Config.EnableNodePort {
 		option.Config.EnableExternalIPs = false
+	} else {
+		if option.Config.Tunnel != option.TunnelDisabled &&
+			option.Config.NodePortMode != option.NodePortModeSNAT {
+
+			log.Warnf("Disabling NodePort's %q mode feature due to tunneling mode being enabled",
+				option.Config.NodePortMode)
+			option.Config.NodePortMode = option.NodePortModeSNAT
+		}
 	}
 }
 
