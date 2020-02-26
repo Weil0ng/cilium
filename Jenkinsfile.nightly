@@ -123,8 +123,12 @@ pipeline {
                     dir("${TESTDIR}"){
                         sh './post_build_agent.sh || true'
                         sh 'vagrant destroy -f || true'
-                        sh './archive_test_results.sh || true'
+                        sh './archive_test_results_eks.sh || true'
+                    }
+                    dir("${GOPATH}/${PROJ_PATH}"){
                         archiveArtifacts artifacts: '*.zip'
+                    }
+                    dir("${TESTDIR}"){
                         junit testDataPublishers: [[$class: 'AttachmentPublisher']], testResults: 'test/*.xml'
                     }
                 }
