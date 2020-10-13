@@ -301,5 +301,30 @@ configuring the CiliumLocalRedirectPolicy.
 Local Redirect Policy updates are currently not supported. If there are any
 changes to be made, delete the existing policy, and re-create a new one.
 
+Real-world Use Cases
+====================
+Local redirect policy allows for some real-world applications to run with Cilium.
 
+Node-local DNS cache
+--------------------
+`DNS node-cache <https://github.com/kubernetes/dns>`_ listens on a static IP to intercept
+traffic from application pods to the cluster's DNS service VIP.
 
+One way to steer traffic to the local DNS node-cache with local redirect policy is to put
+the node-cache in its own pod namespace and let it listen on its own IP.
+Here are a few steps to create such a setup with a Cilium cluster (`example yaml <https://github.com/cilium/cilium/blob/master/examples/kubernetes-local-redirect/node-local-dns.yaml>`_):
+
+- Make sure to use a Node-local DNS image with `PR <https://github.com/kubernetes/dns/pull/407>`_.
+  This is to ensure that we have a knob to disable dummy network interface creation/deletion in
+  Node-local DNS when we deploy it in non-host namespace.
+
+- Modify Node-local DNS cache's deployment yaml to pass these additional arguments:
+  "-skipteardown=true", "-setupinterface=false", and "-setupiptables=false".
+
+- Modify Node-local DNS cache's deployment yaml to put it in non-host namespace by setting
+  "hostNetwork: false" for the daemonset and, in the Corefile, bind to "0.0.0.0" instead of
+  the static IP.
+
+- Deploy the modified Node-local DNS yaml and the `local redirect policy
+  <https://github.com/cilium/cilium/blob/master/examples/kubernetes-local-redirect/node-local-dns-lrp.yaml>`_.
+  Note that you may need to modify the LRP a bit to match the cluster DNS service you have.

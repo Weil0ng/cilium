@@ -30,6 +30,7 @@ Clusterwide
 Committer
 Committers
 ConnectX
+Corefile
 DDoS
 DMA'ed
 DNS
@@ -415,6 +416,7 @@ hexData
 hoc
 hostConfDirMountPath
 hostFirewall
+hostNetwork
 hostPort
 hostServices
 hostonlyif
@@ -715,12 +717,15 @@ serviceMonitor
 servicePort
 sessionAffinity
 setrlimit
+setupinterface
+setupiptables
 sfc
 sg
 sha
 sidecarImageRegex
 sig
 skb
+skipteardown
 sleepAfterInit
 socketPath
 sockmap
